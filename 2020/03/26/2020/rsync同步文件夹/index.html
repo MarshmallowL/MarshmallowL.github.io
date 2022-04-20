@@ -1,0 +1,483 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=light>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://tva1.sinaimg.cn/large/008i3skNgy1gx36z8l4hej305k05kq2t.jpg">
+  <link rel="icon" href="https://tva1.sinaimg.cn/large/008i3skNgy1gx36z8l4hej305k05kq2t.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <meta name="description" content="文章来源 rsync文件同步详解 linux配置rsync服务端  rsync简介 rsync是linux系统下的数据镜像备份工具。使用快速增量备份工具Remote Sync可以远程同步，支持本地复制，或者与其他SSH、rsync主机同步。  安装rsync(centos默认安装了)123yum -y install rsync#查看版本rsync --version   环境说明 PC1: &#x3D;&#x3D;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rsync同步备份">
+<meta property="og:url" content="http://example.com/2020/03/26/2020/rsync%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="文章来源 rsync文件同步详解 linux配置rsync服务端  rsync简介 rsync是linux系统下的数据镜像备份工具。使用快速增量备份工具Remote Sync可以远程同步，支持本地复制，或者与其他SSH、rsync主机同步。  安装rsync(centos默认安装了)123yum -y install rsync#查看版本rsync --version   环境说明 PC1: &#x3D;&#x3D;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-03-26T08:02:06.000Z">
+<meta property="article:modified_time" content="2021-04-03T05:30:52.339Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="util">
+<meta name="twitter:card" content="summary_large_image">
+  
+  <title>rsync同步备份 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/darcula.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.12","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname"}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.2.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>liugs</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://tva1.sinaimg.cn/large/008i3skNgy1gx374wcq0sj317u0u074y.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="rsync同步备份">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-03-26 16:02" pubdate>
+        2020年3月26日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.8k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      9 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">rsync同步备份</h1>
+            
+            <div class="markdown-body">
+              <h2 id="文章来源"><a href="#文章来源" class="headerlink" title="文章来源"></a>文章来源</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/regit/p/8074221.html">rsync文件同步详解</a></li>
+<li><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-11209572-id-3489986.html">linux配置rsync服务端</a></li>
+</ul>
+<h2 id="rsync简介"><a href="#rsync简介" class="headerlink" title="rsync简介"></a>rsync简介</h2><blockquote>
+<p>rsync是linux系统下的数据镜像备份工具。使用快速增量备份工具Remote Sync可以远程同步，支持本地复制，或者与其他SSH、rsync主机同步。</p>
+</blockquote>
+<h2 id="安装rsync-centos默认安装了"><a href="#安装rsync-centos默认安装了" class="headerlink" title="安装rsync(centos默认安装了)"></a>安装rsync(centos默认安装了)</h2><figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">yum -y install rsync<br><span class="hljs-meta">#</span><span class="bash">查看版本</span><br>rsync --version<br></code></pre></div></td></tr></table></figure>
+
+
+<h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><ul>
+<li><p>PC1: ==rsync服务端==，需要被备份的服务器，IP:192.168.80.14, 备份目录 /common</p>
+</li>
+<li><p>PC2: ==rsync客户端==，备份服务器，用于存放备份文件（目录为/test），IP:192.168.80.15</p>
+</li>
+</ul>
+<h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><ol>
+<li>首先登录PC1，编辑配置文件 <code>vim /etc/rsyncd.conf</code>, 配置文件如下</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell"><span class="hljs-meta">#</span><span class="bash">设置服务器信息提示文件，在该文件中编写提示信息</span><br>motd file = /etc/rsyncd.motd<br><span class="hljs-meta">#</span><span class="bash">开启rsync数据传输日志功能</span><br>transfer logging = yes<br><span class="hljs-meta">#</span><span class="bash">设置日志文件名，可通过<span class="hljs-built_in">log</span> format参数设置日志格式</span><br>log file = /var/log/rsyncd.log<br><span class="hljs-meta">#</span><span class="bash">设置rsync进程号保存文件名称</span><br>pid file = /var/run/rsyncd.log<br><span class="hljs-meta">#</span><span class="bash">设置锁文件名称</span><br>lock file = /var/run/rsync.lock<br><span class="hljs-meta">#</span><span class="bash">设置服务器监听的端口号，默认是873</span><br>port = 873<br><span class="hljs-meta">#</span><span class="bash">设置本服务器所监听网卡接口的ip地址</span><br>address = 192.168.80.14<br><span class="hljs-meta">#</span><span class="bash">设置进行数据传输时所使用的帐户名或ID号,默认nobody</span><br>uid = nobody<br><span class="hljs-meta">#</span><span class="bash">设置进行数据传输时所使用的组名或GID号,默认nobody</span><br>gid = nobody<br><span class="hljs-meta">#</span><span class="bash">若为yes, rsync会首先进行chroot设置，将根映射在下面的path参数路径下，对客户端而言，系统的根就是path参数指定的路径。但这样做需要root权限，并且在同步符号连接资料时只会同步名称，不会同步内容。</span><br>use chroot = no<br><span class="hljs-meta">#</span><span class="bash">是否允许客户端上传数据，yes表示不允许</span><br>read only = yes<br><span class="hljs-meta">#</span><span class="bash">设置并发连接数，0表示无限制</span><br>max connections = 10<br><span class="hljs-meta">#</span><span class="bash">自定义模块名，rsync通过模块定义同步的目录，可定义多个</span><br>[common]<br><span class="hljs-meta">#</span><span class="bash">定义注释说明字串</span><br>comment = backup ftp<br><span class="hljs-meta">#</span><span class="bash">同步目录的真实路径通过path指定，该路径是指服务端需要备份的路径</span><br>path = /common<br><span class="hljs-meta"> #</span><span class="bash">忽略一些IO错误</span><br>ignore errors<br><span class="hljs-meta">#</span><span class="bash">exclude = <span class="hljs-built_in">test</span>/    <span class="hljs-comment">#exclude指定common目录下某个目录可以不同步数据</span></span><br><br><span class="hljs-meta">#</span><span class="bash">设置允许连接服务器的账户，此账户可以是系统中不存在的用户</span><br>auth users = tom,jerry<br><span class="hljs-meta">#</span><span class="bash">密码验证文件名，该文件权限要求为只读，建议为600，仅在设置auth users后有效</span><br>secrets file = /etc/rsyncd.secrets<br><span class="hljs-meta">#</span><span class="bash">设置哪些主机可以同步数据，多ip和网段之间使用空格分隔</span><br>hosts allow = 192.168.80.0/255.255.255.0<br><span class="hljs-meta">#</span><span class="bash">除了hosts allow定义的主机外，拒绝其他所有</span><br>hosts deny = *<br><span class="hljs-meta"> #</span><span class="bash">客户端请求显示模块列表时，本模块名称是否显示，默认为<span class="hljs-literal">true</span></span><br>list = false<br></code></pre></div></td></tr></table></figure>
+
+<ol start="2">
+<li>创建密码文件，PC1和PC2都需要操作</li>
+</ol>
+<p>==注意！客户端只需写入密码即可！！==</p>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">echo &quot;tom:123&quot; &gt; /etc/rsyncd.secrets<br>echo &quot;jerry:123&quot; &gt;&gt; /etc/rsyncd.secrets<br>chmod 600 /etc/rsyncd.secrets<br>echo &quot;welcome to access&quot; &gt; /etc/rsyncd.motd  #此项客户端不需要做<br>rsync --daemon    # --daemon表示后台执行，客户端开启rsync不需要--daemon选项<br>echo &quot;/usr/bin/rsync --daemon&quot; &gt;&gt; /etc/rc.local    #开机启动rsync服务<br>firewall-cmd --permanent --add-port=873/tcp    #添加防火墙规则，允许873端口的数据访问<br></code></pre></div></td></tr></table></figure>
+
+<ol start="3">
+<li>查看rsync和se-linux相关的设置（==服务端设置==）</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">getsebool -a | grep rsync<br><span class="hljs-meta">#</span><span class="bash">如果rsync_export_all_ro是off,将其修改为on</span><br>setsebool -P rsync_export_all_ro on<br></code></pre></div></td></tr></table></figure>
+
+<ol start="4">
+<li>rsync语法格式（==客户端执行==）</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">rsync -vzrtopg --progress tom@192.168.80.14::common /test     #通common模块指定的/common目录下的文件拷贝到本客户端的/test目录<br><span class="hljs-meta">#</span><span class="bash">参数说明</span><br>v:显示详细信息<br>z：传输过程中对数据进行压缩<br>r：递归<br>t：保留修改时间属性<br>o：保留文件所有者属性<br>p：保留文件权限属性<br>g：保留文件所属组属性<br>a：归档模式，主要保留文件属性，等同于-rlptgoD<br>--progress：显示数据传输的进度信息<br>--password-file=FILE：指定密码文件，将密码写入文件，实现非交互式数据同步，这个文件名也需要修改权限为600<br>--delete：删除那些仅在目标路径中存在的文件（源路径中不存在），在脚本中的数据同步经常加上此参数<br>--list-only：仅列出服务器模块列表，需要rsync服务器设置list=true<br></code></pre></div></td></tr></table></figure>
+
+<ol start="5">
+<li>shell脚本（==客户端执行==）</li>
+</ol>
+<p><code>touch /backup-ftp.sh</code>  新建脚本</p>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell"><span class="hljs-meta">#</span><span class="bash">!/bin/bash</span><br>export PATH=/bin:/usr/bin:/usr/local/bin<br>SRC=common<br>DEST=/test/<br>server=192.168.80.14<br>user=tom<br>passfile=/etc/rsyncd.secrets<br><span class="hljs-meta">#</span><span class="bash"><span class="hljs-keyword">if</span> the DEST directory not found, <span class="hljs-keyword">then</span> create one</span><br>[ ! -d $DEST ] &amp;&amp; mkdir $DEST<br>[ ! -e $passfile ] &amp;&amp; exit 2<br>rsync -az --delete --password-file=$passfile $&#123;user&#125;@$&#123;server&#125;::$SRC $DEST<br><br></code></pre></div></td></tr></table></figure>
+
+<ol start="6">
+<li>加入定时任务</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell"><span class="hljs-meta">#</span><span class="bash">进入定时任务</span><br>crontab -e <br><span class="hljs-meta">#</span><span class="bash">每隔6小时备份一次</span><br>* */6 * * * sh /backup-ftp.sh<br></code></pre></div></td></tr></table></figure>
+
+<p>以上为rsync备份基本流程，包括踩的一些坑，待有其他坑再补上</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/util/">util</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
