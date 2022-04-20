@@ -4,19 +4,6 @@
   
   
   <entry>
-    <title>test</title>
-    <link href="/2022/04/20/2022/test/"/>
-    <url>/2022/04/20/2022/test/</url>
-    
-    <content type="html"><![CDATA[<p>#这是一个测试博客</p>]]></content>
-    
-    
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>rsync同步备份</title>
     <link href="/2020/03/26/2020/rsync%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/"/>
     <url>/2020/03/26/2020/rsync%E5%90%8C%E6%AD%A5%E6%96%87%E4%BB%B6%E5%A4%B9/</url>
